@@ -45,6 +45,35 @@ class _AuthScreenState extends State<AuthScreen> {
   final _confirmPasswordFocusNode = FocusNode();
   var _visible = true;
   var _isLoading = false;
+  var _gender = "";
+  var _bloodGroup = "";
+  static const fadeClr = 0.25;
+
+  Widget _genderGrpButton(double op, String title, IconData icon) =>
+      ElevatedButton.icon(
+          style: ElevatedButton.styleFrom(
+              backgroundColor:
+                  Theme.of(context).colorScheme.primary.withOpacity(op)),
+          icon: Icon(icon),
+          onPressed: () {
+            setState(() {
+              _gender = title;
+            });
+          },
+          label: Text(title));
+
+  Widget _bloodGrpButton(double op, String title, IconData icon) =>
+      ElevatedButton.icon(
+          style: ElevatedButton.styleFrom(
+              backgroundColor:
+                  Theme.of(context).colorScheme.primary.withOpacity(op)),
+          icon: Icon(icon),
+          onPressed: () {
+            setState(() {
+              _bloodGroup = title;
+            });
+          },
+          label: Text(title));
 
   Future<void> _submit() async {
     FocusScope.of(context).unfocus();
@@ -351,37 +380,26 @@ class _AuthScreenState extends State<AuthScreen> {
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceEvenly,
                                       children: [
-                                        ElevatedButton.icon(
-                                            style: ElevatedButton.styleFrom(
-                                                backgroundColor:
-                                                    Theme.of(context)
-                                                        .colorScheme
-                                                        .primary
-                                                        .withOpacity(0.25)),
-                                            icon: const Icon(Icons.male),
-                                            onPressed: () {},
-                                            label: const Text("Male")),
-                                        ElevatedButton.icon(
-                                            style: ElevatedButton.styleFrom(
-                                                backgroundColor:
-                                                    Theme.of(context)
-                                                        .colorScheme
-                                                        .primary
-                                                        .withOpacity(0.25)),
-                                            icon: const Icon(Icons.female),
-                                            onPressed: () {},
-                                            label: const Text("Female")),
+                                        _genderGrpButton(
+                                            _gender == "Male" ? 1.0 : fadeClr,
+                                            "Male",
+                                            Icons.male),
+                                        _genderGrpButton(
+                                            _gender == "Female" ? 1.0 : fadeClr,
+                                            "Female",
+                                            Icons.female),
                                       ],
                                     ),
                                   ),
                                 ],
                               ),
-                            ),        if ((_authenticationMode ==
+                            ),
+                          if ((_authenticationMode ==
                               AuthenticationMode.signup))
                             Container(
                               margin: const EdgeInsets.only(top: 30),
                               width: deviceWidth * 0.85,
-                              height: 120,
+                              height: 250,
                               child: Column(
                                 children: [
                                   const Text(
@@ -390,30 +408,80 @@ class _AuthScreenState extends State<AuthScreen> {
                                         fontSize: 17, color: Colors.white),
                                   ),
                                   Expanded(
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceEvenly,
+                                    child: Column(
                                       children: [
-                                        ElevatedButton.icon(
-                                            style: ElevatedButton.styleFrom(
-                                                backgroundColor:
-                                                    Theme.of(context)
-                                                        .colorScheme
-                                                        .primary
-                                                        .withOpacity(0.25)),
-                                            icon: const Icon(Icons.male),
-                                            onPressed: () {},
-                                            label: const Text("Male")),
-                                        ElevatedButton.icon(
-                                            style: ElevatedButton.styleFrom(
-                                                backgroundColor:
-                                                    Theme.of(context)
-                                                        .colorScheme
-                                                        .primary
-                                                        .withOpacity(0.25)),
-                                            icon: const Icon(Icons.female),
-                                            onPressed: () {},
-                                            label: const Text("Female")),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceEvenly,
+                                          children: [
+                                            _bloodGrpButton(
+                                                _bloodGroup == "O -"
+                                                    ? 1.0
+                                                    : fadeClr,
+                                                "O -",
+                                                Icons.bloodtype),
+                                            _bloodGrpButton(
+                                                _bloodGroup == "O +"
+                                                    ? 1.0
+                                                    : fadeClr,
+                                                "O +",
+                                                Icons.bloodtype),
+                                          ],
+                                        ),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceEvenly,
+                                          children: [
+                                            _bloodGrpButton(
+                                                _bloodGroup == "A -"
+                                                    ? 1.0
+                                                    : fadeClr,
+                                                "A -",
+                                                Icons.bloodtype),
+                                            _bloodGrpButton(
+                                                _bloodGroup == "A +"
+                                                    ? 1.0
+                                                    : fadeClr,
+                                                "A +",
+                                                Icons.bloodtype),
+                                          ],
+                                        ),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceEvenly,
+                                          children: [
+                                            _bloodGrpButton(
+                                                _bloodGroup == "B -"
+                                                    ? 1.0
+                                                    : fadeClr,
+                                                "B -",
+                                                Icons.bloodtype),
+                                            _bloodGrpButton(
+                                                _bloodGroup == "B +"
+                                                    ? 1.0
+                                                    : fadeClr,
+                                                "B +",
+                                                Icons.bloodtype),
+                                          ],
+                                        ),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceEvenly,
+                                          children: [
+                                            _bloodGrpButton(
+                                                _bloodGroup == "AB -"
+                                                    ? 1.0
+                                                    : fadeClr,
+                                                "AB -",
+                                                Icons.bloodtype),
+                                            _bloodGrpButton(
+                                                _bloodGroup == "AB +"
+                                                    ? 1.0
+                                                    : fadeClr,
+                                                "AB +",
+                                                Icons.bloodtype),
+                                          ],
+                                        ),
                                       ],
                                     ),
                                   ),
@@ -444,10 +512,11 @@ class _AuthScreenState extends State<AuthScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                        Text(
+                          Text(
                             _authenticationMode == AuthenticationMode.signup
-                                ? "Already have an account?" :"Don\'t have an account?",
-                            style: TextStyle(
+                                ? "Already have an account?"
+                                : "Don\'t have an account?",
+                            style: const TextStyle(
                               fontSize: 17.0,
                               fontWeight: FontWeight.w600,
                               color: Colors.white,
