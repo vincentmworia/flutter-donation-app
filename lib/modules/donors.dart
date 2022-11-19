@@ -6,7 +6,7 @@ class Donor {
   Gender? gender;
   String? bloodType;
   String? location;
-  int? phoneNumber;
+  String? phoneNumber;
 
   Donor(
       {this.email,

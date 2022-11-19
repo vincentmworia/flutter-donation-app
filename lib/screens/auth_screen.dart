@@ -2,6 +2,8 @@ import 'package:bloodbankapp/modules/donors.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../helpers/custom_widget.dart';
+import '../helpers/firebase_auth.dart';
 import '../widgets/custom_widgets.dart';
 import '../widgets/input_field.dart';
 import 'home_screen.dart';
@@ -27,8 +29,6 @@ class _AuthScreenState extends State<AuthScreen> {
   final _emailController = TextEditingController();
   final _fullNameController = TextEditingController();
   final _ageController = TextEditingController();
-  final _genderController = TextEditingController();
-  final _bloodTypeController = TextEditingController();
   final _locationController = TextEditingController();
   final _phoneNumberController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -37,19 +37,18 @@ class _AuthScreenState extends State<AuthScreen> {
   final _emailFocusNode = FocusNode();
   final _fullNameFocusNode = FocusNode();
   final _ageFocusNode = FocusNode();
-  final _genderFocusNode = FocusNode();
-  final _bloodTypeFocusNode = FocusNode();
   final _locationFocusNode = FocusNode();
   final _phoneNumberFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
   final _confirmPasswordFocusNode = FocusNode();
   var _visible = true;
   var _isLoading = false;
-  var _gender = "";
-  var _bloodGroup = "";
+
+  // var _gender = "";
+  // var _bloodGroup = "";
   static const fadeClr = 0.25;
 
-  Widget _genderGrpButton(double op, String title, IconData icon) =>
+  Widget _genderGrpButton(double op, Gender title, IconData icon) =>
       ElevatedButton.icon(
           style: ElevatedButton.styleFrom(
               backgroundColor:
@@ -57,10 +56,19 @@ class _AuthScreenState extends State<AuthScreen> {
           icon: Icon(icon),
           onPressed: () {
             setState(() {
-              _gender = title;
+              _donor.gender = title;
             });
           },
-          label: Text(title));
+          label: Text(title == Gender.male ? "Male" : "Female"));
+
+  _showSnackBar(String text) {
+    print("snack");
+    ScaffoldMessenger.of(context).removeCurrentSnackBar();
+    return ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(text),
+      duration: const Duration(seconds: 1),
+    ));
+  }
 
   Widget _bloodGrpButton(double op, String title, IconData icon) =>
       ElevatedButton.icon(
@@ -70,7 +78,7 @@ class _AuthScreenState extends State<AuthScreen> {
           icon: Icon(icon),
           onPressed: () {
             setState(() {
-              _bloodGroup = title;
+              _donor.bloodType = title;
             });
           },
           label: Text(title));
@@ -80,43 +88,79 @@ class _AuthScreenState extends State<AuthScreen> {
     if (_formKey.currentState == null || !(_formKey.currentState!.validate())) {
       return;
     }
+
+    if ((_donor.gender == null) && (_donor.bloodType == null)) {
+      _showSnackBar("Select Gender and Blood Type");
+      return;
+    }
+    if (_donor.gender == null) {
+      _showSnackBar("Select Gender");
+      return;
+    }
+    if (_donor.bloodType == null) {
+      _showSnackBar("Select Blood Type");
+      return;
+    }
     _formKey.currentState!.save();
-    // _userEmail = _userEmail.trim();
-    // _userFirstName = _userFirstName.trim();
-    // _userLastName = _userLastName.trim();
-    // _userPassword = _userPassword.trim();
+    _donor.email?.trim();
+    _donor.fullName?.trim();
+    _donor.phoneNumber?.trim();
+    _donor.age?.trim();
+    _donor.location?.trim();
+    _donor.password?.trim();
+
     if (kDebugMode) {
       print('''
     $_authenticationMode 
+    
+    ${_donor.email}
+    ${_donor.fullName}
+    ${_donor.phoneNumber}
+    ${_donor.age}
+    ${_donor.location}
+    ${_donor.bloodType}    
+    ${_donor.gender}
+    ${_donor.password}
     ''');
     }
     //
     setState(() {
       _isLoading = true;
     });
-    Future.delayed(const Duration(seconds: 3))
-        .then((value) => Navigator.pushNamed(context, HomeScreen.routeName));
-    // try {
-    //   if (_authenticationMode == AuthenticationMode.login) {
-    //     await _activateLogin(_userEmail, _userPassword);
-    //   } else {
-    //     await FirebaseAuthenticationHandler.signup(
-    //             context: context,
-    //             firstname: _userFirstName,
-    //             lastname: _userLastName,
-    //             email: _userEmail,
-    //             password: _userPassword)
-    //         .then((message) => showCustomDialog(context, message));
-    //   }
-    // } catch (error) {
-    //   const errorMessage = 'Failed, check the internet connection later';
-    //   return  showCustomDialog(context, errorMessage);
-    // } finally {
-    //   setState(() {
-    //     _authenticationMode = AuthenticationMode.login;
-    //     _isLoading = false;
-    //   });
-    // }
+    Future.delayed(const Duration(seconds: 3)).then((value) {
+      setState(() {
+        _isLoading = false;
+      });
+      Navigator.pushNamed(context, HomeScreen.routeName);
+    });
+    try {
+      if (_authenticationMode == AuthenticationMode.login) {
+        if (kDebugMode) {
+          print("Logging in");
+        }
+        await FirebaseAuthenticationHandler.login(
+                context: context, donor: _donor)
+            .then((value) => Navigator.pushReplacementNamed(
+                  context,
+                  HomeScreen.routeName,
+                ));
+      } else {
+        if (kDebugMode) {
+          print("Sigining up");
+        }
+        await FirebaseAuthenticationHandler.signup(
+                context: context, donor: _donor)
+            .then((message) async => await customDialog(context, message));
+      }
+    } catch (error) {
+      const errorMessage = 'Failed, check the internet connection later';
+      return await customDialog(context, errorMessage);
+    } finally {
+      setState(() {
+        _authenticationMode = AuthenticationMode.login;
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -138,7 +182,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 //     : deviceHeight * 1.5,
                 height: _authenticationMode == AuthenticationMode.login
                     ? deviceHeight
-                    : 1400,
+                    : 1550,
                 width: double.infinity,
                 child: Form(
                   key: _formKey,
@@ -214,7 +258,7 @@ class _AuthScreenState extends State<AuthScreen> {
                                       TextCapitalization.sentences,
                                   onFieldSubmitted: (_) =>
                                       FocusScope.of(context)
-                                          .requestFocus(_ageFocusNode),
+                                          .requestFocus(_phoneNumberFocusNode),
                                   textInputAction: TextInputAction.next,
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
@@ -224,6 +268,42 @@ class _AuthScreenState extends State<AuthScreen> {
                                   },
                                   onSaved: (value) {
                                     _donor.fullName = value!;
+                                  },
+                                ),
+                                InputField(
+                                  key: const ValueKey('phoneNumber'),
+                                  controller: _phoneNumberController,
+                                  hintText: 'Phone Number',
+                                  keyboardType: TextInputType.number,
+                                  icon: Icons.local_phone,
+                                  obscureText: false,
+                                  focusNode: _phoneNumberFocusNode,
+                                  autoCorrect: false,
+                                  enableSuggestions: false,
+                                  textCapitalization:
+                                      TextCapitalization.sentences,
+                                  onFieldSubmitted: (_) =>
+                                      FocusScope.of(context)
+                                          .requestFocus(_ageFocusNode),
+                                  textInputAction: TextInputAction.next,
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Enter Phone Number';
+                                    }
+                                    if (double.tryParse(value) == null) {
+                                      return 'Invalid number';
+                                    }
+                                    if (value.startsWith("+254")) {
+                                      return 'Use 0700000000 format';
+                                    }
+                                    if (value.length != 10) {
+                                      return 'Use 0700000000 format';
+                                    }
+                                    // todo Validate phone number
+                                    return null;
+                                  },
+                                  onSaved: (value) {
+                                    _donor.phoneNumber = value!;
                                   },
                                 ),
                                 InputField(
@@ -245,6 +325,12 @@ class _AuthScreenState extends State<AuthScreen> {
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
                                       return 'Enter Age';
+                                    }
+                                    if (double.tryParse(value) == null) {
+                                      return 'Invalid Age';
+                                    }
+                                    if (value.startsWith("-")) {
+                                      return 'Invalid Age';
                                     }
                                     // todo Validate negative age
                                     return null;
@@ -381,12 +467,16 @@ class _AuthScreenState extends State<AuthScreen> {
                                           MainAxisAlignment.spaceEvenly,
                                       children: [
                                         _genderGrpButton(
-                                            _gender == "Male" ? 1.0 : fadeClr,
-                                            "Male",
+                                            _donor.gender == Gender.male
+                                                ? 1.0
+                                                : fadeClr,
+                                            Gender.male,
                                             Icons.male),
                                         _genderGrpButton(
-                                            _gender == "Female" ? 1.0 : fadeClr,
-                                            "Female",
+                                            _donor.gender == Gender.female
+                                                ? 1.0
+                                                : fadeClr,
+                                            Gender.female,
                                             Icons.female),
                                       ],
                                     ),
@@ -415,13 +505,13 @@ class _AuthScreenState extends State<AuthScreen> {
                                               MainAxisAlignment.spaceEvenly,
                                           children: [
                                             _bloodGrpButton(
-                                                _bloodGroup == "O -"
+                                                _donor.bloodType == "O -"
                                                     ? 1.0
                                                     : fadeClr,
                                                 "O -",
                                                 Icons.bloodtype),
                                             _bloodGrpButton(
-                                                _bloodGroup == "O +"
+                                                _donor.bloodType == "O +"
                                                     ? 1.0
                                                     : fadeClr,
                                                 "O +",
@@ -433,13 +523,13 @@ class _AuthScreenState extends State<AuthScreen> {
                                               MainAxisAlignment.spaceEvenly,
                                           children: [
                                             _bloodGrpButton(
-                                                _bloodGroup == "A -"
+                                                _donor.bloodType == "A -"
                                                     ? 1.0
                                                     : fadeClr,
                                                 "A -",
                                                 Icons.bloodtype),
                                             _bloodGrpButton(
-                                                _bloodGroup == "A +"
+                                                _donor.bloodType == "A +"
                                                     ? 1.0
                                                     : fadeClr,
                                                 "A +",
@@ -451,13 +541,13 @@ class _AuthScreenState extends State<AuthScreen> {
                                               MainAxisAlignment.spaceEvenly,
                                           children: [
                                             _bloodGrpButton(
-                                                _bloodGroup == "B -"
+                                                _donor.bloodType == "B -"
                                                     ? 1.0
                                                     : fadeClr,
                                                 "B -",
                                                 Icons.bloodtype),
                                             _bloodGrpButton(
-                                                _bloodGroup == "B +"
+                                                _donor.bloodType == "B +"
                                                     ? 1.0
                                                     : fadeClr,
                                                 "B +",
@@ -469,13 +559,13 @@ class _AuthScreenState extends State<AuthScreen> {
                                               MainAxisAlignment.spaceEvenly,
                                           children: [
                                             _bloodGrpButton(
-                                                _bloodGroup == "AB -"
+                                                _donor.bloodType == "AB -"
                                                     ? 1.0
                                                     : fadeClr,
                                                 "AB -",
                                                 Icons.bloodtype),
                                             _bloodGrpButton(
-                                                _bloodGroup == "AB +"
+                                                _donor.bloodType == "AB +"
                                                     ? 1.0
                                                     : fadeClr,
                                                 "AB +",
@@ -571,8 +661,6 @@ class _AuthScreenState extends State<AuthScreen> {
     _emailFocusNode.dispose();
     _fullNameFocusNode.dispose();
     _ageFocusNode.dispose();
-    _genderFocusNode.dispose();
-    _bloodTypeFocusNode.dispose();
     _locationFocusNode.dispose();
     _phoneNumberFocusNode.dispose();
     _passwordFocusNode.dispose();
