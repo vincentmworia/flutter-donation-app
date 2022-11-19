@@ -16,9 +16,11 @@ class InputField extends StatefulWidget {
     this.validator,
     this.onSaved,
     this.initialValue,
+    required this.keyboardType,
   }) : super(key: key);
   final TextEditingController controller;
   final String hintText;
+  final TextInputType? keyboardType;
   final IconData icon;
   final bool obscureText;
   final FocusNode? focusNode;
@@ -58,21 +60,6 @@ class _InputFieldState extends State<InputField> {
         ),
       );
 
-  Widget _textFormField(
-          {required String hintText,
-          required String labelText,
-          required IconData icon}) =>
-      TextFormField(
-        decoration: InputDecoration(
-          filled: true,
-          fillColor: Colors.white,
-          focusedBorder:
-              _outlinedInputBorder(Theme.of(context).colorScheme.primary),
-          // TODO UNPRESSED
-          enabledBorder: _outlinedInputBorder(Colors.grey),
-        ),
-      );
-
   @override
   Widget build(BuildContext context) {
     final inputWidth = MediaQuery.of(context).size.width * 0.85;
@@ -83,7 +70,8 @@ class _InputFieldState extends State<InputField> {
 // cursorHeight: 50.0,
         key: widget.key,
         controller: widget.controller,
-        keyboardType: TextInputType.emailAddress,
+
+        keyboardType: widget.keyboardType,
         focusNode: widget.focusNode,
         autocorrect: widget.autoCorrect,
         enableSuggestions: widget.enableSuggestions,

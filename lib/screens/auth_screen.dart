@@ -1,7 +1,7 @@
+import 'package:bloodbankapp/modules/donors.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import '../helpers/alphabet.dart';
 import '../widgets/custom_widgets.dart';
 import '../widgets/input_field.dart';
 import 'home_screen.dart';
@@ -22,11 +22,7 @@ class AuthScreen extends StatefulWidget {
 class _AuthScreenState extends State<AuthScreen> {
   final _formKey = GlobalKey<FormState>();
   AuthenticationMode _authenticationMode = AuthenticationMode.login;
-
-  var _userEmail = '';
-  var _userFirstName = '';
-  var _userLastName = '';
-  var _userPassword = '';
+  final _donor = Donor();
 
   final _emailController = TextEditingController();
   final _fullNameController = TextEditingController();
@@ -39,7 +35,7 @@ class _AuthScreenState extends State<AuthScreen> {
   final _confirmPasswordController = TextEditingController();
 
   final _emailFocusNode = FocusNode();
-  final _firstNameFocusNode = FocusNode();
+  final _fullNameFocusNode = FocusNode();
   final _ageFocusNode = FocusNode();
   final _genderFocusNode = FocusNode();
   final _bloodTypeFocusNode = FocusNode();
@@ -56,17 +52,13 @@ class _AuthScreenState extends State<AuthScreen> {
       return;
     }
     _formKey.currentState!.save();
-    _userEmail = _userEmail.trim();
-    _userFirstName = _userFirstName.trim();
-    _userLastName = _userLastName.trim();
-    _userPassword = _userPassword.trim();
+    // _userEmail = _userEmail.trim();
+    // _userFirstName = _userFirstName.trim();
+    // _userLastName = _userLastName.trim();
+    // _userPassword = _userPassword.trim();
     if (kDebugMode) {
       print('''
-    $_authenticationMode
-    $_userEmail 
-    $_userFirstName  
-    $_userLastName 
-    $_userPassword
+    $_authenticationMode 
     ''');
     }
     //
@@ -112,9 +104,12 @@ class _AuthScreenState extends State<AuthScreen> {
             containerStyled(context),
             SingleChildScrollView(
               child: SizedBox(
+                // height: _authenticationMode == AuthenticationMode.login
+                //     ? deviceHeight
+                //     : deviceHeight * 1.5,
                 height: _authenticationMode == AuthenticationMode.login
                     ? deviceHeight
-                    : deviceHeight * 1.5,
+                    : 1400,
                 width: double.infinity,
                 child: Form(
                   key: _formKey,
@@ -127,8 +122,8 @@ class _AuthScreenState extends State<AuthScreen> {
                               bottom: deviceHeight * 0.1,
                             )
                           : EdgeInsets.only(
-                              top: deviceHeight * 0.02,
-                              bottom: deviceHeight * 0.02,
+                              top: deviceHeight * 0.05,
+                              bottom: deviceHeight * 0.05,
                             ),
                       padding:
                           EdgeInsets.symmetric(horizontal: deviceWidth * 0.1),
@@ -146,6 +141,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           InputField(
                             key: const ValueKey('email'),
                             controller: _emailController,
+                            keyboardType: TextInputType.emailAddress,
                             hintText: 'Email',
                             icon: Icons.account_box,
                             obscureText: false,
@@ -156,7 +152,7 @@ class _AuthScreenState extends State<AuthScreen> {
                             onFieldSubmitted: (_) => FocusScope.of(context)
                                 .requestFocus(_authenticationMode ==
                                         AuthenticationMode.signup
-                                    ? _firstNameFocusNode
+                                    ? _fullNameFocusNode
                                     : _passwordFocusNode),
                             textInputAction: TextInputAction.next,
                             validator: (value) {
@@ -168,49 +164,98 @@ class _AuthScreenState extends State<AuthScreen> {
                               return null;
                             },
                             onSaved: (value) {
-                              _userEmail = value!;
+                              _donor.email = value!;
                             },
                           ),
                           if ((_authenticationMode ==
                               AuthenticationMode.signup))
-                            InputField(
-                              key: const ValueKey('fullName'),
-                              controller: _fullNameController,
-                              hintText: 'Full Name',
-                              icon: Icons.person,
-                              obscureText: false,
-                              focusNode: _firstNameFocusNode,
-                              autoCorrect: false,
-                              enableSuggestions: false,
-                              textCapitalization: TextCapitalization.sentences,
-                              onFieldSubmitted: (_) => FocusScope.of(context)
-                                  .requestFocus(_authenticationMode ==
-                                          AuthenticationMode.signup
-                                      ? _ageFocusNode
-                                      : _passwordFocusNode),
-                              textInputAction: TextInputAction.next,
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Enter Full Name';
-                                }
-                                var isCaps = false;
-                                for (String val in alphabet) {
-                                  if (val.toUpperCase() == value[0]) {
-                                    isCaps = true;
-                                    break;
-                                  }
-                                }
-                                if (!isCaps) {
-                                  return 'Name must start with a capital letter';
-                                }
-                                return null;
-                              },
-                              onSaved: (value) {
-                                _userFirstName = value!;
-                              },
+                            Column(
+                              children: [
+                                InputField(
+                                  key: const ValueKey('fullName'),
+                                  keyboardType: TextInputType.name,
+                                  controller: _fullNameController,
+                                  hintText: 'Full Name',
+                                  icon: Icons.person,
+                                  obscureText: false,
+                                  focusNode: _fullNameFocusNode,
+                                  autoCorrect: false,
+                                  enableSuggestions: false,
+                                  textCapitalization:
+                                      TextCapitalization.sentences,
+                                  onFieldSubmitted: (_) =>
+                                      FocusScope.of(context)
+                                          .requestFocus(_ageFocusNode),
+                                  textInputAction: TextInputAction.next,
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Enter Full Name';
+                                    }
+                                    return null;
+                                  },
+                                  onSaved: (value) {
+                                    _donor.fullName = value!;
+                                  },
+                                ),
+                                InputField(
+                                  key: const ValueKey('age'),
+                                  controller: _ageController,
+                                  hintText: 'Age',
+                                  keyboardType: TextInputType.number,
+                                  icon: Icons.timer,
+                                  obscureText: false,
+                                  focusNode: _ageFocusNode,
+                                  autoCorrect: false,
+                                  enableSuggestions: false,
+                                  textCapitalization:
+                                      TextCapitalization.sentences,
+                                  onFieldSubmitted: (_) =>
+                                      FocusScope.of(context)
+                                          .requestFocus(_locationFocusNode),
+                                  textInputAction: TextInputAction.next,
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Enter Age';
+                                    }
+                                    // todo Validate negative age
+                                    return null;
+                                  },
+                                  onSaved: (value) {
+                                    _donor.age = value!;
+                                  },
+                                ),
+                                InputField(
+                                  key: const ValueKey('location'),
+                                  controller: _locationController,
+                                  hintText: 'Location Name',
+                                  keyboardType: TextInputType.text,
+                                  icon: Icons.location_on,
+                                  obscureText: false,
+                                  focusNode: _locationFocusNode,
+                                  autoCorrect: false,
+                                  enableSuggestions: false,
+                                  textCapitalization:
+                                      TextCapitalization.sentences,
+                                  onFieldSubmitted: (_) =>
+                                      FocusScope.of(context)
+                                          .requestFocus(_passwordFocusNode),
+                                  textInputAction: TextInputAction.next,
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Enter Location';
+                                    }
+                                    // todo Validate negative age
+                                    return null;
+                                  },
+                                  onSaved: (value) {
+                                    _donor.location = value!;
+                                  },
+                                ),
+                              ],
                             ),
                           InputField(
                             key: const ValueKey('password'),
+                            keyboardType: TextInputType.visiblePassword,
                             controller: _passwordController,
                             hintText: 'Password',
                             icon: Icons.lock,
@@ -244,12 +289,6 @@ class _AuthScreenState extends State<AuthScreen> {
                                   _passwordController.text
                                           .toLowerCase()
                                           .trim() ==
-                                      '${_fullNameController.text}${_ageController.text}'
-                                          .toLowerCase()
-                                          .trim() ||
-                                  _passwordController.text
-                                          .toLowerCase()
-                                          .trim() ==
                                       _ageController.text
                                           .toLowerCase()
                                           .trim() ||
@@ -264,7 +303,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               return null;
                             },
                             onSaved: (value) {
-                              _userPassword = value!;
+                              _donor.password = value!;
                             },
                           ),
                           if ((_authenticationMode ==
@@ -272,6 +311,7 @@ class _AuthScreenState extends State<AuthScreen> {
                             InputField(
                               key: const ValueKey('confirmPassword'),
                               controller: _confirmPasswordController,
+                              keyboardType: TextInputType.visiblePassword,
                               hintText: 'Confirm Password',
                               icon: Icons.lock,
                               obscureText: true,
@@ -292,6 +332,93 @@ class _AuthScreenState extends State<AuthScreen> {
                                 }
                                 return null;
                               },
+                            ),
+                          if ((_authenticationMode ==
+                              AuthenticationMode.signup))
+                            Container(
+                              margin: const EdgeInsets.only(top: 30),
+                              width: deviceWidth * 0.85,
+                              height: 120,
+                              child: Column(
+                                children: [
+                                  const Text(
+                                    "Select Gender",
+                                    style: TextStyle(
+                                        fontSize: 17, color: Colors.white),
+                                  ),
+                                  Expanded(
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        ElevatedButton.icon(
+                                            style: ElevatedButton.styleFrom(
+                                                backgroundColor:
+                                                    Theme.of(context)
+                                                        .colorScheme
+                                                        .primary
+                                                        .withOpacity(0.25)),
+                                            icon: const Icon(Icons.male),
+                                            onPressed: () {},
+                                            label: const Text("Male")),
+                                        ElevatedButton.icon(
+                                            style: ElevatedButton.styleFrom(
+                                                backgroundColor:
+                                                    Theme.of(context)
+                                                        .colorScheme
+                                                        .primary
+                                                        .withOpacity(0.25)),
+                                            icon: const Icon(Icons.female),
+                                            onPressed: () {},
+                                            label: const Text("Female")),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),        if ((_authenticationMode ==
+                              AuthenticationMode.signup))
+                            Container(
+                              margin: const EdgeInsets.only(top: 30),
+                              width: deviceWidth * 0.85,
+                              height: 120,
+                              child: Column(
+                                children: [
+                                  const Text(
+                                    "Select Blood Group",
+                                    style: TextStyle(
+                                        fontSize: 17, color: Colors.white),
+                                  ),
+                                  Expanded(
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        ElevatedButton.icon(
+                                            style: ElevatedButton.styleFrom(
+                                                backgroundColor:
+                                                    Theme.of(context)
+                                                        .colorScheme
+                                                        .primary
+                                                        .withOpacity(0.25)),
+                                            icon: const Icon(Icons.male),
+                                            onPressed: () {},
+                                            label: const Text("Male")),
+                                        ElevatedButton.icon(
+                                            style: ElevatedButton.styleFrom(
+                                                backgroundColor:
+                                                    Theme.of(context)
+                                                        .colorScheme
+                                                        .primary
+                                                        .withOpacity(0.25)),
+                                            icon: const Icon(Icons.female),
+                                            onPressed: () {},
+                                            label: const Text("Female")),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
@@ -317,8 +444,9 @@ class _AuthScreenState extends State<AuthScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          const Text(
-                            "Don\'t have an account?",
+                        Text(
+                            _authenticationMode == AuthenticationMode.signup
+                                ? "Already have an account?" :"Don\'t have an account?",
                             style: TextStyle(
                               fontSize: 17.0,
                               fontWeight: FontWeight.w600,
@@ -372,7 +500,7 @@ class _AuthScreenState extends State<AuthScreen> {
   void dispose() {
     super.dispose();
     _emailFocusNode.dispose();
-    _firstNameFocusNode.dispose();
+    _fullNameFocusNode.dispose();
     _ageFocusNode.dispose();
     _genderFocusNode.dispose();
     _bloodTypeFocusNode.dispose();
