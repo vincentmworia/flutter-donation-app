@@ -1,3 +1,4 @@
+import 'package:bloodbankapp/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 
 import 'screens/auth_screen.dart';
@@ -39,6 +40,7 @@ class MyApp extends StatelessWidget {
       home: defaultScreen,
       routes: {
         AuthScreen.routeName: (_) => const AuthScreen(),
+        HomeScreen.routeName: (_) => const HomeScreen(),
       },
       onGenerateRoute: (settings) => MaterialPageRoute(
         builder: (_) => MyApp.defaultScreen,
