@@ -1,4 +1,6 @@
+import 'package:bloodbankapp/providers/fetch_firebase_data.dart';
 import 'package:bloodbankapp/providers/logged_in_user.dart';
+import 'package:bloodbankapp/screens/blood_groups_data.dart';
 import 'package:bloodbankapp/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -7,7 +9,6 @@ import 'screens/auth_screen.dart';
 
 void main() {
   runApp(const MyApp());
-
 }
 
 class MyApp extends StatelessWidget {
@@ -20,8 +21,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_)=>LoggedInUser(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => LoggedInUser()),
+        ChangeNotifierProvider(create: (_) => FetchFirebaseData()),
+      ],
       child: MaterialApp(
         title: appTitle,
         debugShowCheckedModeBanner: false,
@@ -41,12 +45,14 @@ class MyApp extends StatelessWidget {
               fontWeight: FontWeight.bold,
               letterSpacing: 5.0,
             ),
-          ).copyWith(iconTheme: const IconThemeData(color: Colors.white, size: 30)),
+          ).copyWith(
+              iconTheme: const IconThemeData(color: Colors.white, size: 30)),
         ),
         home: defaultScreen,
         routes: {
           AuthScreen.routeName: (_) => const AuthScreen(),
           HomeScreen.routeName: (_) => const HomeScreen(),
+          BloodGroupsData.routeName:(_)=>const  BloodGroupsData( )
         },
         onGenerateRoute: (settings) => MaterialPageRoute(
           builder: (_) => MyApp.defaultScreen,
