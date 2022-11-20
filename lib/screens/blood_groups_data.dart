@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'blood_donor_users.dart';
+import '../widgets/blood_donor_users.dart';
+
 
 class BloodGroupsData extends StatelessWidget {
   const BloodGroupsData({Key? key}) : super(key: key);
@@ -13,6 +14,7 @@ class BloodGroupsData extends StatelessWidget {
     final donors = data["data"] as List;
     return SafeArea(
         child: Scaffold(
+
       appBar: AppBar(
         title: Text("${data["title"]}"),
       ),
@@ -21,7 +23,6 @@ class BloodGroupsData extends StatelessWidget {
           Container(
             width: double.infinity,
             decoration: const BoxDecoration(
-                color: Colors.white,
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(25),
                   topRight: Radius.circular(25),
@@ -37,6 +38,16 @@ class BloodGroupsData extends StatelessWidget {
                   color: Theme.of(context).colorScheme.secondary),
             ),
           ),
+          ElevatedButton(
+              onPressed: () {
+                ScaffoldMessenger.of(context).removeCurrentSnackBar();
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content:
+                      Text("Blood Group ${data["title"]} request successful"),
+                  duration: const Duration(seconds: 1),
+                ));
+              },
+              child: const Text("Request All")),
           Expanded(
               child: ListView.separated(
                   physics: const BouncingScrollPhysics(),
