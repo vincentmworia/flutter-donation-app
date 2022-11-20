@@ -224,12 +224,15 @@ class _AuthScreenState extends State<AuthScreen> {
                 //     : deviceHeight * 1.5,
                 height: _authenticationMode == AuthenticationMode.login
                     ? deviceHeight
-                    : 1550,
+                    :_authenticationMode == AuthenticationMode.signupHospitalUser
+                    ? deviceHeight*1.2
+                    : 1400,
                 width: double.infinity,
                 child: Form(
                   key: _formKey,
                   child: Column(children: [
                     AnimatedContainer(
+                      height: deviceHeight*0.25,
                       duration: const Duration(milliseconds: 300),
                       margin: _authenticationMode == AuthenticationMode.login
                           ? EdgeInsets.only(
@@ -243,7 +246,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       padding:
                           EdgeInsets.symmetric(horizontal: deviceWidth * 0.1),
                       child: Image.asset(
-                        "images/logo1.PNG",
+                        "images/logo2.png",
                         fit: BoxFit.cover,
                       ),
                       // decoration: BoxDecoration(color: Colors.white,shape: BoxShape.circle),

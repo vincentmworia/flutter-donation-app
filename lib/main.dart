@@ -3,11 +3,20 @@ import 'package:bloodbankapp/providers/logged_in_user.dart';
 import 'package:bloodbankapp/screens/blood_groups_data.dart';
 import 'package:bloodbankapp/screens/home_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:provider/provider.dart';
 
 import 'screens/auth_screen.dart';
 
 void main() {
+
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  // FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+  ]);
+
   runApp(const MyApp());
 }
 

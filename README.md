@@ -1,6 +1,6 @@
 # bloodbankapp
 
-A new Flutter project.
+Flutter blood bank application.
 
 ## Getting Started
 
