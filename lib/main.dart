@@ -36,7 +36,8 @@ class MyApp extends StatelessWidget {
             elevation: 0,
             titleTextStyle: TextStyle(
               fontSize: 22.0,
-              color: secondaryColor,
+              color: Colors.white,
+              // color: secondaryColor,
               fontWeight: FontWeight.bold,
               letterSpacing: 5.0,
             ),

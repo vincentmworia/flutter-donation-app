@@ -83,19 +83,18 @@ class FirebaseAuthenticationHandler with ChangeNotifier {
   static Future<String> signupDonor(
       {required BuildContext context, required Donor donor}) async {
     String? message;
-    final emailKey = donor.phoneNumber.toString();
+    final phoneKey = donor.phoneNumber.toString();
 
     try {
       await http.patch(Uri.parse('$firebaseUrl/users/donors.json'),
           body: json.encode({
-            emailKey: {
+            phoneKey: {
               'email': donor.email,
               'full_name': donor.fullName,
               'age': donor.age,
               'gender': donor.gender == Gender.male ? "Male" : "Female",
               'blood_type': donor.bloodType,
               'location': donor.location,
-              'password': donor.password,
             },
           }));
       message = 'Welcome,\n${donor.fullName}';

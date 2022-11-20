@@ -163,10 +163,6 @@ class _AuthScreenState extends State<AuthScreen> {
                 });
                 await customDialog(context, message);
               }
-          // Navigator.pushReplacementNamed(
-          //   context,
-          //   HomeScreen.routeName,
-          // );
         });
       } else if (_authenticationMode == AuthenticationMode.signupDonor) {
         if (kDebugMode) {
@@ -198,7 +194,9 @@ class _AuthScreenState extends State<AuthScreen> {
       return await customDialog(context, errorMessage);
     } finally {
       setState(() {
-        _authenticationMode = AuthenticationMode.login;
+        if(!(_authenticationMode ==AuthenticationMode.signupDonor)){
+          _authenticationMode = AuthenticationMode.login;
+        }
         if (_isLoading) {
           _isLoading = false;
         }
@@ -408,10 +406,10 @@ class _AuthScreenState extends State<AuthScreen> {
                                     enableSuggestions: false,
                                     textCapitalization:
                                         TextCapitalization.sentences,
-                                    onFieldSubmitted: (_) =>
-                                        FocusScope.of(context)
-                                            .requestFocus(_passwordFocusNode),
-                                    textInputAction: TextInputAction.next,
+                                    // onFieldSubmitted: (_) =>
+                                    //     FocusScope.of(context)
+                                    //         .requestFocus(_passwordFocusNode),
+                                    textInputAction: TextInputAction.done,
                                     validator: (value) {
                                       if (value == null || value.isEmpty) {
                                         return 'Enter Location';
@@ -425,6 +423,11 @@ class _AuthScreenState extends State<AuthScreen> {
                                   ),
                               ],
                             ),
+
+                          if (
+                          _authenticationMode ==
+                              AuthenticationMode.signupHospitalUser||_authenticationMode ==
+                              AuthenticationMode.login)
                           InputField(
                             key: const ValueKey('password'),
                             keyboardType: TextInputType.visiblePassword,
@@ -437,19 +440,17 @@ class _AuthScreenState extends State<AuthScreen> {
                             enableSuggestions: false,
                             textCapitalization: TextCapitalization.none,
                             onFieldSubmitted: (_) => FocusScope.of(context)
-                                .requestFocus((_authenticationMode ==
-                                            AuthenticationMode.signupDonor ||
+                                .requestFocus((
                                         _authenticationMode ==
                                             AuthenticationMode
                                                 .signupHospitalUser)
                                     ? _confirmPasswordFocusNode
                                     : null),
-                            textInputAction: (_authenticationMode ==
-                                        AuthenticationMode.signupDonor ||
+                            textInputAction: (
                                     _authenticationMode ==
                                         AuthenticationMode.signupHospitalUser)
                                 ? TextInputAction.next
-                                : TextInputAction.done,
+                                : null,
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Please enter a valid password.';
@@ -483,10 +484,9 @@ class _AuthScreenState extends State<AuthScreen> {
                               _donor.password = value!;
                             },
                           ),
-                          if ((_authenticationMode ==
-                                  AuthenticationMode.signupDonor ||
+                          if (
                               _authenticationMode ==
-                                  AuthenticationMode.signupHospitalUser))
+                                  AuthenticationMode.signupHospitalUser)
                             InputField(
                               key: const ValueKey('confirmPassword'),
                               controller: _confirmPasswordController,
@@ -498,8 +498,8 @@ class _AuthScreenState extends State<AuthScreen> {
                               autoCorrect: false,
                               enableSuggestions: false,
                               textCapitalization: TextCapitalization.none,
-                              onFieldSubmitted: (_) =>
-                                  FocusScope.of(context).requestFocus(null),
+                              // onFieldSubmitted: (_) =>
+                              //     FocusScope.of(context).requestFocus(null),
                               textInputAction: TextInputAction.done,
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
