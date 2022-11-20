@@ -10,8 +10,12 @@ import '../screens/auth_screen.dart';
 
 class FirebaseAuthenticationHandler with ChangeNotifier {
   // todo, token expire? force log out and reset preferences
-  static Uri _urlAuth(String operation) => Uri.parse(
-      'https://identitytoolkit.googleapis.com/v1/accounts:${operation}key=$webApiKey');
+  // todo Add token expiry
+  // todo Add deactivate application
+
+  static Uri _urlAuth(String operation) =>
+      Uri.parse(
+          'https://identitytoolkit.googleapis.com/v1/accounts:${operation}key=$webApiKey');
 
   static String getErrorMessage(String errorTitle) {
     var message = 'Operation failed';
@@ -27,7 +31,7 @@ class FirebaseAuthenticationHandler with ChangeNotifier {
       message = 'User needs to be allowed by the admin';
     } else if (errorTitle.contains('TOO_MANY_ATTEMPTS_TRY_LATER:')) {
       message =
-          'We have blocked all requests from this device due to unusual activity. Try again later.';
+      'We have blocked all requests from this device due to unusual activity. Try again later.';
     } else if (errorTitle.contains('EMAIL_NOT_FOUND')) {
       message = 'Could not find a user with that email.';
     } else if (errorTitle.contains('WEAK_PASSWORD')) {
@@ -40,7 +44,7 @@ class FirebaseAuthenticationHandler with ChangeNotifier {
     return message;
   }
 
-  static Future<String> signup(
+  static Future<String> signupHospitalUser(
       {required BuildContext context, required Donor donor}) async {
     String? message;
     final response = await http.post(_urlAuth('signUp?'),
@@ -49,13 +53,12 @@ class FirebaseAuthenticationHandler with ChangeNotifier {
           "password": donor.password,
           "returnSecureToken": true,
         }));
-    print("Attempt signup");
     final responseData = json.decode(response.body) as Map<String, dynamic>;
     if (responseData['error'] != null) {
       message = getErrorMessage(responseData['error']['message']);
       return message;
     } else {
-      await http.patch(Uri.parse('$firebaseUrl/users.json'),
+      await http.patch(Uri.parse('$firebaseUrl/users/hospitalUsers.json'),
           body: json.encode({
             "${responseData['localId']}": {
               'localId': responseData['localId'],
@@ -66,19 +69,43 @@ class FirebaseAuthenticationHandler with ChangeNotifier {
               'blood_type': donor.bloodType,
               'location': donor.location,
               'password': donor.password,
+              // 'authorized':1000,
             },
-          })) /* .then((_) =>*/ /* _token = null*/ /*)*/;
+          }));
     }
-    print("message");
     message = 'Welcome,\n${donor.fullName}';
     return message;
+  }
+
+  static Future<String> signupDonor(
+      {required BuildContext context, required Donor donor}) async {
+    String? message;
+    final emailKey = donor.phoneNumber.toString();
+
+    try {
+      await http.patch(Uri.parse('$firebaseUrl/users/donors.json'),
+          body: json.encode({
+            emailKey: {
+              'email': donor.email,
+              'full_name': donor.fullName,
+              'age': donor.age,
+              'gender': donor.gender == Gender.male ? "Male" : "Female",
+              'blood_type': donor.bloodType,
+              'location': donor.location,
+              'password': donor.password,
+            },
+          }));
+      message = 'Welcome,\n${donor.fullName}';
+      return message;
+    } catch (e) {
+      message = e.toString();
+      return message;
+    }
   }
 
   static Future<String> login(
       {required BuildContext context, required Donor donor}) async {
     String message;
-
-    print("attempt");
     final response = await http.post(_urlAuth('signInWithPassword?'),
         body: json.encode({
           "email": donor.email,
@@ -86,7 +113,6 @@ class FirebaseAuthenticationHandler with ChangeNotifier {
           "returnSecureToken": true,
         }));
 
-    print(response.body);
     final responseData = json.decode(response.body) as Map<String, dynamic>;
 
     if (responseData['error'] != null) {
@@ -95,7 +121,7 @@ class FirebaseAuthenticationHandler with ChangeNotifier {
     }
 
     message = 'Welcome';
-    print(message);
+
     return message;
   }
 

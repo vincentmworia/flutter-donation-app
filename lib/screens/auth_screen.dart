@@ -1,16 +1,17 @@
-import 'package:bloodbankapp/modules/donors.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../helpers/custom_widget.dart';
 import '../helpers/firebase_auth.dart';
+import '../modules/donors.dart';
 import '../widgets/custom_widgets.dart';
 import '../widgets/input_field.dart';
 import 'home_screen.dart';
 
 enum AuthenticationMode {
   login,
-  signup,
+  signupDonor,
+  signupHospitalUser,
 }
 
 class AuthScreen extends StatefulWidget {
@@ -62,7 +63,6 @@ class _AuthScreenState extends State<AuthScreen> {
           label: Text(title == Gender.male ? "Male" : "Female"));
 
   _showSnackBar(String text) {
-    print("snack");
     ScaffoldMessenger.of(context).removeCurrentSnackBar();
     return ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(text),
@@ -83,23 +83,31 @@ class _AuthScreenState extends State<AuthScreen> {
           },
           label: Text(title));
 
+  // Future<void> _submit() async {
+  //   Navigator.pushReplacementNamed(context, HomeScreen.routeName);
+  // }
+
+  // todo submit to firebase
+
   Future<void> _submit() async {
     FocusScope.of(context).unfocus();
     if (_formKey.currentState == null || !(_formKey.currentState!.validate())) {
       return;
     }
 
-    if ((_donor.gender == null) && (_donor.bloodType == null)) {
-      _showSnackBar("Select Gender and Blood Type");
-      return;
-    }
-    if (_donor.gender == null) {
-      _showSnackBar("Select Gender");
-      return;
-    }
-    if (_donor.bloodType == null) {
-      _showSnackBar("Select Blood Type");
-      return;
+    if (_authenticationMode == AuthenticationMode.signupDonor) {
+      if ((_donor.gender == null) && (_donor.bloodType == null)) {
+        _showSnackBar("Select Gender and Blood Type");
+        return;
+      }
+      if (_donor.gender == null) {
+        _showSnackBar("Select Gender");
+        return;
+      }
+      if (_donor.bloodType == null) {
+        _showSnackBar("Select Blood Type");
+        return;
+      }
     }
     _formKey.currentState!.save();
     _donor.email?.trim();
@@ -111,14 +119,14 @@ class _AuthScreenState extends State<AuthScreen> {
 
     if (kDebugMode) {
       print('''
-    $_authenticationMode 
-    
+    $_authenticationMode
+
     ${_donor.email}
     ${_donor.fullName}
     ${_donor.phoneNumber}
     ${_donor.age}
     ${_donor.location}
-    ${_donor.bloodType}    
+    ${_donor.bloodType}
     ${_donor.gender}
     ${_donor.password}
     ''');
@@ -126,12 +134,6 @@ class _AuthScreenState extends State<AuthScreen> {
     //
     setState(() {
       _isLoading = true;
-    });
-    Future.delayed(const Duration(seconds: 3)).then((value) {
-      setState(() {
-        _isLoading = false;
-      });
-      Navigator.pushNamed(context, HomeScreen.routeName);
     });
     try {
       if (_authenticationMode == AuthenticationMode.login) {
@@ -144,11 +146,18 @@ class _AuthScreenState extends State<AuthScreen> {
                   context,
                   HomeScreen.routeName,
                 ));
-      } else {
+      } else if (_authenticationMode == AuthenticationMode.signupDonor) {
         if (kDebugMode) {
-          print("Sigining up");
+          print("Sigining up Donor");
         }
-        await FirebaseAuthenticationHandler.signup(
+        await FirebaseAuthenticationHandler.signupDonor(
+                context: context, donor: _donor)
+            .then((message) async => await customDialog(context, message));
+      } else if (_authenticationMode == AuthenticationMode.signupHospitalUser) {
+        if (kDebugMode) {
+          print("Sigining up Hospital User");
+        }
+        await FirebaseAuthenticationHandler.signupHospitalUser(
                 context: context, donor: _donor)
             .then((message) async => await customDialog(context, message));
       }
@@ -165,6 +174,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
   @override
   Widget build(BuildContext context) {
+    print(_authenticationMode);
     final deviceHeight =
         MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top;
     final deviceWidth = MediaQuery.of(context).size.width;
@@ -223,8 +233,9 @@ class _AuthScreenState extends State<AuthScreen> {
                             enableSuggestions: false,
                             textCapitalization: TextCapitalization.none,
                             onFieldSubmitted: (_) => FocusScope.of(context)
-                                .requestFocus(_authenticationMode ==
-                                        AuthenticationMode.signup
+                                .requestFocus((_authenticationMode ==
+                                        AuthenticationMode.signupHospitalUser||_authenticationMode ==
+                                        AuthenticationMode.signupDonor)
                                     ? _fullNameFocusNode
                                     : _passwordFocusNode),
                             textInputAction: TextInputAction.next,
@@ -241,7 +252,9 @@ class _AuthScreenState extends State<AuthScreen> {
                             },
                           ),
                           if ((_authenticationMode ==
-                              AuthenticationMode.signup))
+                                  AuthenticationMode.signupDonor ||
+                              _authenticationMode ==
+                                  AuthenticationMode.signupHospitalUser))
                             Column(
                               children: [
                                 InputField(
@@ -283,8 +296,12 @@ class _AuthScreenState extends State<AuthScreen> {
                                   textCapitalization:
                                       TextCapitalization.sentences,
                                   onFieldSubmitted: (_) =>
-                                      FocusScope.of(context)
-                                          .requestFocus(_ageFocusNode),
+                                      FocusScope.of(context).requestFocus(
+                                          _authenticationMode ==
+                                                  AuthenticationMode
+                                                      .signupHospitalUser
+                                              ? _passwordFocusNode
+                                              : _ageFocusNode),
                                   textInputAction: TextInputAction.next,
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
@@ -306,66 +323,70 @@ class _AuthScreenState extends State<AuthScreen> {
                                     _donor.phoneNumber = value!;
                                   },
                                 ),
-                                InputField(
-                                  key: const ValueKey('age'),
-                                  controller: _ageController,
-                                  hintText: 'Age',
-                                  keyboardType: TextInputType.number,
-                                  icon: Icons.timer,
-                                  obscureText: false,
-                                  focusNode: _ageFocusNode,
-                                  autoCorrect: false,
-                                  enableSuggestions: false,
-                                  textCapitalization:
-                                      TextCapitalization.sentences,
-                                  onFieldSubmitted: (_) =>
-                                      FocusScope.of(context)
-                                          .requestFocus(_locationFocusNode),
-                                  textInputAction: TextInputAction.next,
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Enter Age';
-                                    }
-                                    if (double.tryParse(value) == null) {
-                                      return 'Invalid Age';
-                                    }
-                                    if (value.startsWith("-")) {
-                                      return 'Invalid Age';
-                                    }
-                                    // todo Validate negative age
-                                    return null;
-                                  },
-                                  onSaved: (value) {
-                                    _donor.age = value!;
-                                  },
-                                ),
-                                InputField(
-                                  key: const ValueKey('location'),
-                                  controller: _locationController,
-                                  hintText: 'Location Name',
-                                  keyboardType: TextInputType.text,
-                                  icon: Icons.location_on,
-                                  obscureText: false,
-                                  focusNode: _locationFocusNode,
-                                  autoCorrect: false,
-                                  enableSuggestions: false,
-                                  textCapitalization:
-                                      TextCapitalization.sentences,
-                                  onFieldSubmitted: (_) =>
-                                      FocusScope.of(context)
-                                          .requestFocus(_passwordFocusNode),
-                                  textInputAction: TextInputAction.next,
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Enter Location';
-                                    }
-                                    // todo Validate negative age
-                                    return null;
-                                  },
-                                  onSaved: (value) {
-                                    _donor.location = value!;
-                                  },
-                                ),
+                                if (_authenticationMode ==
+                                    AuthenticationMode.signupDonor)
+                                  InputField(
+                                    key: const ValueKey('age'),
+                                    controller: _ageController,
+                                    hintText: 'Age',
+                                    keyboardType: TextInputType.number,
+                                    icon: Icons.timer,
+                                    obscureText: false,
+                                    focusNode: _ageFocusNode,
+                                    autoCorrect: false,
+                                    enableSuggestions: false,
+                                    textCapitalization:
+                                        TextCapitalization.sentences,
+                                    onFieldSubmitted: (_) =>
+                                        FocusScope.of(context)
+                                            .requestFocus(_locationFocusNode),
+                                    textInputAction: TextInputAction.next,
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return 'Enter Age';
+                                      }
+                                      if (double.tryParse(value) == null) {
+                                        return 'Invalid Age';
+                                      }
+                                      if (value.startsWith("-")) {
+                                        return 'Invalid Age';
+                                      }
+                                      // todo Validate negative age
+                                      return null;
+                                    },
+                                    onSaved: (value) {
+                                      _donor.age = value!;
+                                    },
+                                  ),
+                                if (_authenticationMode ==
+                                    AuthenticationMode.signupDonor)
+                                  InputField(
+                                    key: const ValueKey('location'),
+                                    controller: _locationController,
+                                    hintText: 'Location Name',
+                                    keyboardType: TextInputType.text,
+                                    icon: Icons.location_on,
+                                    obscureText: false,
+                                    focusNode: _locationFocusNode,
+                                    autoCorrect: false,
+                                    enableSuggestions: false,
+                                    textCapitalization:
+                                        TextCapitalization.sentences,
+                                    onFieldSubmitted: (_) =>
+                                        FocusScope.of(context)
+                                            .requestFocus(_passwordFocusNode),
+                                    textInputAction: TextInputAction.next,
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return 'Enter Location';
+                                      }
+                                      // todo Validate negative age
+                                      return null;
+                                    },
+                                    onSaved: (value) {
+                                      _donor.location = value!;
+                                    },
+                                  ),
                               ],
                             ),
                           InputField(
@@ -380,14 +401,16 @@ class _AuthScreenState extends State<AuthScreen> {
                             enableSuggestions: false,
                             textCapitalization: TextCapitalization.none,
                             onFieldSubmitted: (_) => FocusScope.of(context)
-                                .requestFocus(_authenticationMode ==
-                                        AuthenticationMode.signup
+                                .requestFocus((_authenticationMode ==
+                                        AuthenticationMode.signupDonor||_authenticationMode ==
+                                        AuthenticationMode.signupHospitalUser)
                                     ? _confirmPasswordFocusNode
                                     : null),
-                            textInputAction:
-                                _authenticationMode == AuthenticationMode.signup
-                                    ? TextInputAction.next
-                                    : TextInputAction.done,
+                            textInputAction: (_authenticationMode ==
+                                    AuthenticationMode.signupDonor||_authenticationMode ==
+                                    AuthenticationMode.signupHospitalUser)
+                                ? TextInputAction.next
+                                : TextInputAction.done,
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Please enter a valid password.';
@@ -422,7 +445,9 @@ class _AuthScreenState extends State<AuthScreen> {
                             },
                           ),
                           if ((_authenticationMode ==
-                              AuthenticationMode.signup))
+                                  AuthenticationMode.signupDonor ||
+                              _authenticationMode ==
+                                  AuthenticationMode.signupHospitalUser))
                             InputField(
                               key: const ValueKey('confirmPassword'),
                               controller: _confirmPasswordController,
@@ -449,7 +474,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               },
                             ),
                           if ((_authenticationMode ==
-                              AuthenticationMode.signup))
+                              AuthenticationMode.signupDonor))
                             Container(
                               margin: const EdgeInsets.only(top: 30),
                               width: deviceWidth * 0.85,
@@ -485,7 +510,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               ),
                             ),
                           if ((_authenticationMode ==
-                              AuthenticationMode.signup))
+                              AuthenticationMode.signupDonor))
                             Container(
                               margin: const EdgeInsets.only(top: 30),
                               width: deviceWidth * 0.85,
@@ -588,60 +613,81 @@ class _AuthScreenState extends State<AuthScreen> {
                                     color: Colors.white,
                                   ))
                                 : _authenticationMode ==
-                                        AuthenticationMode.login
-                                    ? const Text("Login")
-                                    : const Text("Register"),
+                                        AuthenticationMode.signupDonor
+                                    ? const Text("Register Donor")
+                                    : _authenticationMode ==
+                                            AuthenticationMode
+                                                .signupHospitalUser
+                                        ? const Text("Register User")
+                                        : const Text("Login"),
                           ),
                         ],
                       ),
                     ),
                     Container(
-                      margin:
-                          EdgeInsets.symmetric(vertical: deviceHeight * 0.05),
+                      margin: EdgeInsets.only(top: deviceHeight * 0.05),
                       width: deviceWidth * 0.8,
+                      // height: 100,
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        mainAxisAlignment:
+                            (_authenticationMode == AuthenticationMode.login)
+                                ? MainAxisAlignment.spaceEvenly
+                                : MainAxisAlignment.center,
                         children: [
-                          Text(
-                            _authenticationMode == AuthenticationMode.signup
-                                ? "Already have an account?"
-                                : "Don\'t have an account?",
-                            style: const TextStyle(
-                              fontSize: 17.0,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
-                          InkWell(
-                            onTap: () {
-                              setState(() {
-                                _visible = false;
+                          if (_authenticationMode == AuthenticationMode.login)
+                            TextButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _visible = false;
 
+                                    _authenticationMode =
+                                        AuthenticationMode.signupHospitalUser;
+                                  });
+                                  Future.delayed(
+                                          const Duration(milliseconds: 300))
+                                      .then((value) => setState(() {}))
+                                      .then((value) => setState(() {
+                                            _visible = true;
+                                          }));
+                                },
+                                child: Text(
+                                  "Register User",
+                                  style: TextStyle(
+                                    fontSize: 17.0,
+                                    fontWeight: FontWeight.w600,
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                  ),
+                                )),
+                          TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  _visible = false;
+
+                                  _authenticationMode ==
+                                          AuthenticationMode.login
+                                      ? _authenticationMode =
+                                          AuthenticationMode.signupDonor
+                                      : _authenticationMode =
+                                          AuthenticationMode.login;
+                                });
+                                Future.delayed(
+                                        const Duration(milliseconds: 300))
+                                    .then((value) => setState(() {}))
+                                    .then((value) => setState(() {
+                                          _visible = true;
+                                        }));
+                              },
+                              child: Text(
                                 _authenticationMode == AuthenticationMode.login
-                                    ? _authenticationMode =
-                                        AuthenticationMode.signup
-                                    : _authenticationMode =
-                                        AuthenticationMode.login;
-                              });
-                              print(_authenticationMode);
-                              Future.delayed(const Duration(milliseconds: 300))
-                                  .then((value) => setState(() {}))
-                                  .then((value) => setState(() {
-                                        _visible = true;
-                                        print(_visible);
-                                      }));
-                            },
-                            child: Text(
-                              _authenticationMode == AuthenticationMode.login
-                                  ? "Register"
-                                  : "Login",
-                              style: TextStyle(
-                                fontSize: 17.0,
-                                fontWeight: FontWeight.w600,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                            ),
-                          ),
+                                    ? "Register Donor"
+                                    : "Login User",
+                                style: TextStyle(
+                                  fontSize: 17.0,
+                                  fontWeight: FontWeight.w600,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                              )),
                         ],
                       ),
                     ),

@@ -36,7 +36,7 @@ class MyApp extends StatelessWidget {
             fontWeight: FontWeight.bold,
             letterSpacing: 5.0,
           ),
-        ).copyWith(iconTheme: const IconThemeData(color: secondaryColor)),
+        ).copyWith(iconTheme: const IconThemeData(color: Colors.white, size: 30)),
       ),
       home: defaultScreen,
       routes: {

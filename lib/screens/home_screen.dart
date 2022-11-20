@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../widgets/custom_drawer.dart';
+
 class HomeScreen extends StatelessWidget {
   const HomeScreen({Key? key}) : super(key: key);
 static const routeName="/home_screen";
@@ -8,6 +10,7 @@ static const routeName="/home_screen";
     return SafeArea(
         child: Scaffold(
       appBar: AppBar(),
+          drawer: CustomDrawer(),
     ));
   }
 }
