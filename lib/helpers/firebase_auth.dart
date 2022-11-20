@@ -2,20 +2,23 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 
 import '../modules/donors.dart';
+import '../modules/logged_user.dart';
 import '../private_data.dart';
+import '../providers/logged_in_user.dart';
 import '../screens/auth_screen.dart';
+import '../widgets/input_field.dart';
 
 class FirebaseAuthenticationHandler with ChangeNotifier {
   // todo, token expire? force log out and reset preferences
   // todo Add token expiry
   // todo Add deactivate application
 
-  static Uri _urlAuth(String operation) =>
-      Uri.parse(
-          'https://identitytoolkit.googleapis.com/v1/accounts:${operation}key=$webApiKey');
+  static Uri _urlAuth(String operation) => Uri.parse(
+      'https://identitytoolkit.googleapis.com/v1/accounts:${operation}key=$webApiKey');
 
   static String getErrorMessage(String errorTitle) {
     var message = 'Operation failed';
@@ -31,7 +34,7 @@ class FirebaseAuthenticationHandler with ChangeNotifier {
       message = 'User needs to be allowed by the admin';
     } else if (errorTitle.contains('TOO_MANY_ATTEMPTS_TRY_LATER:')) {
       message =
-      'We have blocked all requests from this device due to unusual activity. Try again later.';
+          'We have blocked all requests from this device due to unusual activity. Try again later.';
     } else if (errorTitle.contains('EMAIL_NOT_FOUND')) {
       message = 'Could not find a user with that email.';
     } else if (errorTitle.contains('WEAK_PASSWORD')) {
@@ -69,7 +72,7 @@ class FirebaseAuthenticationHandler with ChangeNotifier {
               'blood_type': donor.bloodType,
               'location': donor.location,
               'password': donor.password,
-              // 'authorized':1000,
+              'authorized':InputField.notAllowedInApp,
             },
           }));
     }
@@ -120,6 +123,29 @@ class FirebaseAuthenticationHandler with ChangeNotifier {
       return message;
     }
 
+    final data =
+        await http.get(Uri.parse('$firebaseUrl/users/hospitalUsers.json'));
+    final jsonData = json.decode(data.body) as Map<String, dynamic>;
+    print(jsonData);
+    LoggedUser? usr;
+    jsonData.forEach((key, value) {
+      if (key == value['localId']) {
+        print("found");
+        usr = LoggedUser(
+          id: value['localId'],
+          email: value["email"],
+          fullName: value["full_name"],
+          gender: value["gender"],
+          allowedInApp: value["authorized"] == InputField.allowedInApp ? true : false,
+        );
+        print(usr);
+        Provider.of<LoggedInUser>(context, listen: false).setLoggedUser(usr);
+      }
+    });
+    if (!(usr!.allowedInApp)) {
+      return "User not allowed in the app";
+    }
+
     message = 'Welcome';
 
     return message;
@@ -127,6 +153,7 @@ class FirebaseAuthenticationHandler with ChangeNotifier {
 
   // todo logout
   static Future<void> logout(BuildContext context) async {
+    Provider.of<LoggedInUser>(context).setLoggedUser(null);
     Navigator.pushReplacementNamed(context, AuthScreen.routeName);
   }
 }

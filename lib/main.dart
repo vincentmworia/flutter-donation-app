@@ -1,5 +1,7 @@
+import 'package:bloodbankapp/providers/logged_in_user.dart';
 import 'package:bloodbankapp/screens/home_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'screens/auth_screen.dart';
 
@@ -18,36 +20,39 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: appTitle,
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSwatch().copyWith(
-          primary: primaryColor,
-          secondary: secondaryColor,
-        ),
-        appBarTheme: const AppBarTheme(
-          toolbarHeight: 65,
-          centerTitle: true,
-          elevation: 0,
-          titleTextStyle: TextStyle(
-            fontSize: 22.0,
-            color: secondaryColor,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 5.0,
+    return ChangeNotifierProvider(
+      create: (_)=>LoggedInUser(),
+      child: MaterialApp(
+        title: appTitle,
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSwatch().copyWith(
+            primary: primaryColor,
+            secondary: secondaryColor,
           ),
-        ).copyWith(iconTheme: const IconThemeData(color: Colors.white, size: 30)),
-      ),
-      home: defaultScreen,
-      routes: {
-        AuthScreen.routeName: (_) => const AuthScreen(),
-        HomeScreen.routeName: (_) => const HomeScreen(),
-      },
-      onGenerateRoute: (settings) => MaterialPageRoute(
-        builder: (_) => MyApp.defaultScreen,
-      ),
-      onUnknownRoute: (settings) => MaterialPageRoute(
-        builder: (_) => MyApp.defaultScreen,
+          appBarTheme: const AppBarTheme(
+            toolbarHeight: 65,
+            centerTitle: true,
+            elevation: 0,
+            titleTextStyle: TextStyle(
+              fontSize: 22.0,
+              color: secondaryColor,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 5.0,
+            ),
+          ).copyWith(iconTheme: const IconThemeData(color: Colors.white, size: 30)),
+        ),
+        home: defaultScreen,
+        routes: {
+          AuthScreen.routeName: (_) => const AuthScreen(),
+          HomeScreen.routeName: (_) => const HomeScreen(),
+        },
+        onGenerateRoute: (settings) => MaterialPageRoute(
+          builder: (_) => MyApp.defaultScreen,
+        ),
+        onUnknownRoute: (settings) => MaterialPageRoute(
+          builder: (_) => MyApp.defaultScreen,
+        ),
       ),
     );
   }

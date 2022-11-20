@@ -1,9 +1,13 @@
+import 'package:provider/provider.dart';
+
+import '../modules/logged_user.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../helpers/custom_widget.dart';
 import '../helpers/firebase_auth.dart';
 import '../modules/donors.dart';
+import '../providers/logged_in_user.dart';
 import '../widgets/custom_widgets.dart';
 import '../widgets/input_field.dart';
 import 'home_screen.dart';
@@ -129,8 +133,12 @@ class _AuthScreenState extends State<AuthScreen> {
     ${_donor.bloodType}
     ${_donor.gender}
     ${_donor.password}
+    
     ''');
     }
+
+
+
     //
     setState(() {
       _isLoading = true;
@@ -142,24 +150,48 @@ class _AuthScreenState extends State<AuthScreen> {
         }
         await FirebaseAuthenticationHandler.login(
                 context: context, donor: _donor)
-            .then((value) => Navigator.pushReplacementNamed(
+            .then((message) async{
+              if(message.contains("Welcome")){
+                Navigator.pushReplacementNamed(
                   context,
                   HomeScreen.routeName,
-                ));
+                );
+              }else{
+
+                setState(() {
+                  _isLoading = false;
+                });
+                await customDialog(context, message);
+              }
+          // Navigator.pushReplacementNamed(
+          //   context,
+          //   HomeScreen.routeName,
+          // );
+        });
       } else if (_authenticationMode == AuthenticationMode.signupDonor) {
         if (kDebugMode) {
           print("Sigining up Donor");
         }
         await FirebaseAuthenticationHandler.signupDonor(
                 context: context, donor: _donor)
-            .then((message) async => await customDialog(context, message));
+            .then((message) async {
+          setState(() {
+            _isLoading = false;
+          });
+          await customDialog(context, message);
+        });
       } else if (_authenticationMode == AuthenticationMode.signupHospitalUser) {
         if (kDebugMode) {
           print("Sigining up Hospital User");
         }
         await FirebaseAuthenticationHandler.signupHospitalUser(
                 context: context, donor: _donor)
-            .then((message) async => await customDialog(context, message));
+            .then((message) async {
+          setState(() {
+            _isLoading = false;
+          });
+          await customDialog(context, message);
+        });
       }
     } catch (error) {
       const errorMessage = 'Failed, check the internet connection later';
@@ -167,7 +199,9 @@ class _AuthScreenState extends State<AuthScreen> {
     } finally {
       setState(() {
         _authenticationMode = AuthenticationMode.login;
-        _isLoading = false;
+        if (_isLoading) {
+          _isLoading = false;
+        }
       });
     }
   }
@@ -234,8 +268,10 @@ class _AuthScreenState extends State<AuthScreen> {
                             textCapitalization: TextCapitalization.none,
                             onFieldSubmitted: (_) => FocusScope.of(context)
                                 .requestFocus((_authenticationMode ==
-                                        AuthenticationMode.signupHospitalUser||_authenticationMode ==
-                                        AuthenticationMode.signupDonor)
+                                            AuthenticationMode
+                                                .signupHospitalUser ||
+                                        _authenticationMode ==
+                                            AuthenticationMode.signupDonor)
                                     ? _fullNameFocusNode
                                     : _passwordFocusNode),
                             textInputAction: TextInputAction.next,
@@ -402,13 +438,16 @@ class _AuthScreenState extends State<AuthScreen> {
                             textCapitalization: TextCapitalization.none,
                             onFieldSubmitted: (_) => FocusScope.of(context)
                                 .requestFocus((_authenticationMode ==
-                                        AuthenticationMode.signupDonor||_authenticationMode ==
-                                        AuthenticationMode.signupHospitalUser)
+                                            AuthenticationMode.signupDonor ||
+                                        _authenticationMode ==
+                                            AuthenticationMode
+                                                .signupHospitalUser)
                                     ? _confirmPasswordFocusNode
                                     : null),
                             textInputAction: (_authenticationMode ==
-                                    AuthenticationMode.signupDonor||_authenticationMode ==
-                                    AuthenticationMode.signupHospitalUser)
+                                        AuthenticationMode.signupDonor ||
+                                    _authenticationMode ==
+                                        AuthenticationMode.signupHospitalUser)
                                 ? TextInputAction.next
                                 : TextInputAction.done,
                             validator: (value) {
