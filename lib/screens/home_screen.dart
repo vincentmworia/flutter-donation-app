@@ -20,18 +20,28 @@ class _HomeScreenState extends State<HomeScreen> {
   var _init = true;
   var _isLoading = true;
 
+  _fetchData() {
+    setState(() {
+      _isLoading = true;
+    });
+    Future.delayed(Duration.zero)
+        .then((value) async =>
+            await Provider.of<FetchFirebaseData>(context, listen: false)
+                .getBloodGroups()
+                .then((value) {
+              homeData = value ?? [];
+              print(homeData);
+            }))
+        .then((value) => setState(
+              () => _isLoading = false,
+            ));
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_init) {
-      Future.delayed(Duration.zero)
-          .then((value) async =>
-              await Provider.of<FetchFirebaseData>(context, listen: false)
-                  .getBloodGroups()
-                  .then((value) => homeData = value ?? []))
-          .then((value) => setState(
-                () => _isLoading = false,
-              ));
+      _fetchData();
 
       _init = false;
     }
@@ -69,7 +79,9 @@ class _HomeScreenState extends State<HomeScreen> {
         MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top;
     return SafeArea(
         child: Scaffold(
-      appBar: AppBar(title: const Text("Home Screen")),
+      appBar: AppBar(title: const Text("Blood Bank"), actions: [
+        IconButton(onPressed: _fetchData, icon: const Icon(Icons.refresh))
+      ]),
       drawer: const CustomDrawer(),
       body: _isLoading
           ? Center(

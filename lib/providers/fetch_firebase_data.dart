@@ -30,6 +30,7 @@ class FetchFirebaseData with ChangeNotifier {
     final jsonData = json.decode(data.body) as Map<String, dynamic>;
 
     final jsonValues = jsonData.values.toList();
+    _donorByBloodGrp.clear();
     for (var bloodGrp in _bloodGroups) {
       final value = jsonValues
           .where((element) => element["blood_type"] == bloodGrp)
@@ -37,7 +38,7 @@ class FetchFirebaseData with ChangeNotifier {
       final mapData = {
         "title": bloodGrp,
         "donors": value.length.toString(),
-        "quantity": (value.length * 0.350).toStringAsFixed(1),
+        "quantity": (value.length * 0.350).toStringAsFixed(2),
         "data": value,
       };
       _donorByBloodGrp.add(mapData);
