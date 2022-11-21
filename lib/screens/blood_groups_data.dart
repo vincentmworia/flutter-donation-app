@@ -27,7 +27,6 @@ class BloodGroupsData extends StatelessWidget {
                   topLeft: Radius.circular(25),
                   topRight: Radius.circular(25),
                 )),
-            // margin: ,
             padding: const EdgeInsets.all(15),
             child: Text(
               "${data["quantity"]} L of blood available\n${data["donors"]} donors\n",

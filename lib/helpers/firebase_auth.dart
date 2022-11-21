@@ -9,14 +9,14 @@ import '../modules/donors.dart';
 import '../modules/logged_user.dart';
 import '../private_data.dart';
 import '../providers/logged_in_user.dart';
-import '../screens/auth_screen.dart';
 import '../widgets/input_field.dart';
 
-class FirebaseAuthenticationHandler with ChangeNotifier {
-  // todo, token expire? force log out and reset preferences
-  // todo Add token expiry
-  // todo Add deactivate application
+enum ReturnCode {
+  successful,
+  failed,
+}
 
+class FirebaseAuthenticationHandler with ChangeNotifier {
   static Uri _urlAuth(String operation) => Uri.parse(
       'https://identitytoolkit.googleapis.com/v1/accounts:${operation}key=$webApiKey');
 
@@ -72,7 +72,7 @@ class FirebaseAuthenticationHandler with ChangeNotifier {
               'blood_type': donor.bloodType,
               'location': donor.location,
               'password': donor.password,
-              'authorized':InputField.notAllowedInApp,
+              'authorized': InputField.allowedInApp,
             },
           }));
     }
@@ -125,19 +125,17 @@ class FirebaseAuthenticationHandler with ChangeNotifier {
     final data =
         await http.get(Uri.parse('$firebaseUrl/users/hospitalUsers.json'));
     final jsonData = json.decode(data.body) as Map<String, dynamic>;
-    print(jsonData);
     LoggedUser? usr;
     jsonData.forEach((key, value) {
-      if (key == value['localId']) {
-        print("found");
+      if (donor.email == value['email']) {
         usr = LoggedUser(
           id: value['localId'],
           email: value["email"],
           fullName: value["full_name"],
           gender: value["gender"],
-          allowedInApp: value["authorized"] == InputField.allowedInApp ? true : false,
+          allowedInApp:
+              value["authorized"] == InputField.allowedInApp ? true : false,
         );
-        print(usr);
         Provider.of<LoggedInUser>(context, listen: false).setLoggedUser(usr);
       }
     });
@@ -150,9 +148,14 @@ class FirebaseAuthenticationHandler with ChangeNotifier {
     return message;
   }
 
-  // todo logout
-  static Future<void> logout(BuildContext context) async {
-    Provider.of<LoggedInUser>(context).setLoggedUser(null);
-    Navigator.pushReplacementNamed(context, AuthScreen.routeName);
+  static Future<ReturnCode> logout(BuildContext context) async {
+    try {
+      print("try");
+      Provider.of<LoggedInUser>(context,listen: false).setLoggedUser(null);
+      return ReturnCode.successful;
+    } catch (e) {
+      print(e.toString());
+      return ReturnCode.failed;
+    }
   }
 }

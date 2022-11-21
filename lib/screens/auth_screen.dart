@@ -1,13 +1,8 @@
-import 'package:provider/provider.dart';
-
-import '../modules/logged_user.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import '../helpers/custom_widget.dart';
 import '../helpers/firebase_auth.dart';
 import '../modules/donors.dart';
-import '../providers/logged_in_user.dart';
 import '../widgets/custom_widgets.dart';
 import '../widgets/input_field.dart';
 import 'home_screen.dart';
@@ -86,12 +81,6 @@ class _AuthScreenState extends State<AuthScreen> {
             });
           },
           label: Text(title));
-
-  // Future<void> _submit() async {
-  //   Navigator.pushReplacementNamed(context, HomeScreen.routeName);
-  // }
-
-  // todo submit to firebase
 
   Future<void> _submit() async {
     FocusScope.of(context).unfocus();
@@ -177,9 +166,6 @@ class _AuthScreenState extends State<AuthScreen> {
           await customDialog(context, message);
         });
       } else if (_authenticationMode == AuthenticationMode.signupHospitalUser) {
-        if (kDebugMode) {
-          print("Sigining up Hospital User");
-        }
         await FirebaseAuthenticationHandler.signupHospitalUser(
                 context: context, donor: _donor)
             .then((message) async {
@@ -206,7 +192,6 @@ class _AuthScreenState extends State<AuthScreen> {
 
   @override
   Widget build(BuildContext context) {
-    print(_authenticationMode);
     final deviceHeight =
         MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top;
     final deviceWidth = MediaQuery.of(context).size.width;
@@ -353,7 +338,6 @@ class _AuthScreenState extends State<AuthScreen> {
                                     if (value.length != 10) {
                                       return 'Use 0700000000 format';
                                     }
-                                    // todo Validate phone number
                                     return null;
                                   },
                                   onSaved: (value) {
@@ -388,7 +372,6 @@ class _AuthScreenState extends State<AuthScreen> {
                                       if (value.startsWith("-")) {
                                         return 'Invalid Age';
                                       }
-                                      // todo Validate negative age
                                       return null;
                                     },
                                     onSaved: (value) {
@@ -409,15 +392,11 @@ class _AuthScreenState extends State<AuthScreen> {
                                     enableSuggestions: false,
                                     textCapitalization:
                                         TextCapitalization.sentences,
-                                    // onFieldSubmitted: (_) =>
-                                    //     FocusScope.of(context)
-                                    //         .requestFocus(_passwordFocusNode),
                                     textInputAction: TextInputAction.done,
                                     validator: (value) {
                                       if (value == null || value.isEmpty) {
                                         return 'Enter Location';
                                       }
-                                      // todo Validate negative age
                                       return null;
                                     },
                                     onSaved: (value) {

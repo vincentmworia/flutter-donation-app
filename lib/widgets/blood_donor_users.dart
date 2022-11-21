@@ -15,7 +15,6 @@ class _BloodDonorUsersState extends State<BloodDonorUsers> {
   @override
   Widget build(BuildContext context) {
     const textStyle = TextStyle(fontSize: 18);
-    print(widget.donorData);
     return Stack(
       alignment: _expand ? Alignment.topRight : Alignment.centerRight,
       children: [
@@ -24,7 +23,6 @@ class _BloodDonorUsersState extends State<BloodDonorUsers> {
           width: double.infinity,
           height: _expand ? 300 : 75,
           decoration: BoxDecoration(
-            // color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
             borderRadius: BorderRadius.circular(20),
           ),
           child: _expand

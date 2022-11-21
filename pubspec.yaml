@@ -25,7 +25,6 @@ flutter:
   uses-material-design: true
   assets:
     - images/
-    - images/
 flutter_icons:
   android: true
   remove_alpha_ios: true

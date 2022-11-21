@@ -10,9 +10,7 @@ import 'package:provider/provider.dart';
 import 'screens/auth_screen.dart';
 
 void main() {
-
-  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
-  // FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+  WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
   ]);
@@ -61,7 +59,7 @@ class MyApp extends StatelessWidget {
         routes: {
           AuthScreen.routeName: (_) => const AuthScreen(),
           HomeScreen.routeName: (_) => const HomeScreen(),
-          BloodGroupsData.routeName:(_)=>const  BloodGroupsData( )
+          BloodGroupsData.routeName: (_) => const BloodGroupsData()
         },
         onGenerateRoute: (settings) => MaterialPageRoute(
           builder: (_) => MyApp.defaultScreen,

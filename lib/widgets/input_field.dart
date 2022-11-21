@@ -35,6 +35,7 @@ class InputField extends StatefulWidget {
 
   static const allowedInApp = "300003";
   static const notAllowedInApp = "300";
+
   @override
   State<InputField> createState() => _InputFieldState();
 }
@@ -69,7 +70,6 @@ class _InputFieldState extends State<InputField> {
       padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 15.0),
       child: TextFormField(
         initialValue: widget.initialValue,
-// cursorHeight: 50.0,
         key: widget.key,
         controller: widget.controller,
 
@@ -87,15 +87,12 @@ class _InputFieldState extends State<InputField> {
           fillColor: Colors.white,
           focusedBorder:
               _outlinedInputBorder(Theme.of(context).colorScheme.primary),
-          // TODO UNPRESSED
           enabledBorder: _outlinedInputBorder(Colors.grey),
           contentPadding: const EdgeInsets.symmetric(vertical: 15.0),
           constraints: BoxConstraints(
             maxWidth: inputWidth,
             minWidth: inputWidth,
           ),
-          // fillColor: Colors.white54,
-          // filled: false,
           hintText: widget.hintText,
           prefixIcon: Icon(
             widget.icon,
